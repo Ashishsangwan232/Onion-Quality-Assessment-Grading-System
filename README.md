@@ -4,6 +4,14 @@ Give it a photograph of onions. It finds every onion, checks that each detection
 
 No clicking or hand-placed prompts. It works on a single photo, from the command line, in a Streamlit app, or live from a laptop or phone camera.
 
+## Datasets
+
+| Dataset | Size | Link |
+|---|---|---|
+| Image Dataset of Red and White Onion Bulbs and Leaves (Kulkarni, Pawale, Suryawanshi) | 1.5 GB | https://data.mendeley.com/datasets/42bcyncfhy/2 |
+| Onion dataset (Aishwarya M P, Padmanabha Reddy) | 109 MB | https://data.mendeley.com/datasets/7nxxn4gj5s/2 |
+| TOM2024: tomato, onion and maize pests and diseases (Appiah et al.) | 1.3 GB | https://data.mendeley.com/datasets/3d4yg89rtr/1 |
+
 ---
 
 ## Results at a glance
@@ -219,6 +227,32 @@ Photo-level: `n_onions`, `n_healthy`, `n_unhealthy`, `pct_healthy`, `pct_unhealt
 
 ---
 
+## Deploy on Render.com (via GitHub)
+
+The repo ships with a `Dockerfile` and a `render.yaml` Blueprint that run the Streamlit app on CPU.
+
+1. Push the repo to GitHub, including the weights in `onion_grader/` (`onion_yolo.pt`, `mobile_sam.pt`, `onion_gate_v5.pth`, `face_yunet.onnx`, `calibration.json`). All are under GitHub's 100 MB file limit.
+2. On Render: **New + → Blueprint**, connect GitHub and pick this repository. Render reads `render.yaml` and creates the web service.
+3. Wait for the first build (~10 min: it installs CPU-only PyTorch). Each later push to `main` redeploys automatically.
+
+| Setting | Value | Why |
+|---|---|---|
+| Plan | **Standard (2 GB)** | The three models peak at **~1.5 GB RAM** while grading a photo. Free and Starter (512 MB) will run out of memory. |
+| Runtime | Docker, `python:3.12-slim`, CPU-only torch | Keeps the image small; Render has no GPU |
+| Health check | `/_stcore/health` | Streamlit's built-in endpoint |
+| `ONION_DISABLE_LIVE=1` | hides the Live camera tab | A server has no camera, and it can't reach a phone on your home wi-fi |
+
+Expect a few seconds per photo, depending on the CPU Render gives you (it took ~9 s on a small test machine). The first photo after a deploy is slower while the models load.
+
+Run the same image locally:
+
+```bash
+docker build -t onion-grader .
+docker run -p 10000:10000 onion-grader      # open http://localhost:10000
+```
+
+---
+
 ## Repository layout
 
 ```
@@ -243,6 +277,9 @@ results_v4/, results_v5/   evaluation reports and trained weights
 datasets/                  onion_quality, Onion_mix, mixed_crops, vegqual_crops, crops_v4
 research papers/           related literature
 report.docx, onion_quality_presentation.pptx   project report and slides
+Dockerfile, render.yaml     Render.com deployment
+requirements.txt           Python dependencies (torch installed separately)
+.streamlit/config.toml     app theme and server settings
 ```
 
 `datasets/`, `kaggle_upload/`, `results_v*/` and `venv/` are not committed (see `.gitignore`).

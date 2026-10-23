@@ -300,7 +300,9 @@ with st.sidebar:
     )
 
 # =================================================================== mode: photo | live
-MODES = ["📷  Photo analysis", "🎥  Live camera"]
+# On a server (Render etc.) there is no camera to open: set ONION_DISABLE_LIVE=1
+LIVE_OK = os.environ.get("ONION_DISABLE_LIVE", "").lower() not in ("1", "true", "yes")
+MODES = ["📷  Photo analysis"] + (["🎥  Live camera"] if LIVE_OK else [])
 try:
     _modebar = st.container(key="modebar")
 except TypeError:  # very old Streamlit: no keyed containers
@@ -309,7 +311,7 @@ with _modebar:
     mode = st.radio(
         "mode", MODES, horizontal=True, key="og_mode", label_visibility="collapsed"
     )
-if mode == MODES[1]:
+if LIVE_OK and mode == MODES[1]:
     from onion_grader.live_page import render_live
 
     render_live(load, md, card)

@@ -1,0 +1,8 @@
+# torch / torchvision are installed from the CPU index in the Dockerfile.
+# For a local install:  pip install torch torchvision  then  pip install -r requirements.txt
+ultralytics>=8.4,<8.5
+numpy>=2.0
+pillow>=10
+scipy>=1.11
+streamlit>=1.40
+opencv-python-headless>=4.8

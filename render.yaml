@@ -1,0 +1,16 @@
+# Render Blueprint: New + > Blueprint > pick this repo.
+services:
+  - type: web
+    name: onion-quality-grading
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: standard          # 2 GB RAM. The models peak at ~1.5 GB; free/starter (512 MB) will crash.
+    region: singapore
+    branch: main
+    autoDeploy: true
+    healthCheckPath: /_stcore/health
+    envVars:
+      - key: ONION_DISABLE_LIVE   # no camera on a server: hide the Live camera tab
+        value: "1"
+      - key: ONION_DEVICE
+        value: cpu

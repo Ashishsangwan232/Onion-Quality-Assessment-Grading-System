@@ -1,0 +1,19 @@
+.git
+.gitignore
+venv/
+datasets/
+kaggle_upload/
+live_snapshots/
+results_v4/
+results_v5/
+research papers/
+Claude outputs/
+tools/
+**/__pycache__/
+*.pyc
+*.pdf
+*.docx
+*.pptx
+onion_grader/app_original_backup.py
+onion_grader/onion_gate.pth
+onion_grader/_selftest.jpg
