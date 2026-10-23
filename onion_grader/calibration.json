@@ -1,0 +1,194 @@
+{
+  "_README": "Fitted on ALL labelled data for deployment. NOT for scoring: every number in results/ comes from cross-validated fits that never saw the onion they scored.",
+  "version": 1,
+  "created": "2026-09-17",
+  "defect": {
+    "s_thr": 0.5,
+    "v_thr": 0.45,
+    "isotonic_x": [
+      0.002371,
+      0.005378,
+      0.007159,
+      0.007981,
+      0.008974,
+      0.010699,
+      0.012225,
+      0.014414,
+      0.017653,
+      0.020282,
+      0.021589,
+      0.044268,
+      0.068125,
+      0.098121,
+      0.100169,
+      0.109964,
+      0.145861,
+      0.186641,
+      0.225672,
+      0.270438,
+      0.275185,
+      0.50722,
+      0.513132,
+      0.549709,
+      0.579411,
+      0.594344,
+      0.595656
+    ],
+    "isotonic_y": [
+      0.02,
+      0.02,
+      0.02,
+      0.02,
+      0.02,
+      0.02,
+      0.02,
+      0.02,
+      0.02,
+      0.02,
+      0.035,
+      0.044,
+      0.058,
+      0.1,
+      0.13,
+      0.137143,
+      0.1425,
+      0.146667,
+      0.261667,
+      0.35,
+      0.538462,
+      0.7,
+      0.7,
+      0.7,
+      0.7,
+      0.7,
+      0.7
+    ],
+    "detection_limit": 0.1,
+    "agmark_cuts": [
+      0.2,
+      0.5
+    ],
+    "_note": "agmark_cuts are the statutory 1/5 and 1/2 and are never fitted"
+  },
+  "anomaly": {
+    "mu": [
+      0.49488919973373413,
+      0.5334193110466003,
+      0.03598684445023537
+    ],
+    "inv_cov": [
+      [
+        49.80945144732201,
+        37.62406234798229,
+        88.66997835012982
+      ],
+      [
+        37.62406234798229,
+        77.04051947372156,
+        57.576173282258566
+      ],
+      [
+        88.66997835012982,
+        57.57617328225857,
+        965.227865884666
+      ]
+    ],
+    "threshold": 8.501484351815426,
+    "_note": "fitted on healthy onions only; threshold is the 95th percentile of HEALTHY pixel distances"
+  },
+  "scale": {
+    "coin_mm": 21.93,
+    "resolution_exponent": 1.525,
+    "_note": "SAM mask area scales as resolution^1.525, not ^2 (Phase 11)"
+  },
+  "detector": {
+    "conf": 0.25,
+    "imgsz": 960,
+    "coin_rule": {
+      "max_area_ratio": 0.45,
+      "max_saturation": 0.25
+    },
+    "_note": "coin rule removed 54/72 spurious boxes and 0/537 onions"
+  },
+  "size_codes": [
+    [
+      "A",
+      0,
+      30
+    ],
+    [
+      "B",
+      30,
+      45
+    ],
+    [
+      "C",
+      45,
+      60
+    ],
+    [
+      "D",
+      60,
+      9999
+    ]
+  ],
+  "reported_performance": {
+    "_note": "cross-validated, grouped by physical onion; see results/phase12",
+    "quadratic_kappa": 0.757,
+    "exact_band": 0.617,
+    "within_one_band": 0.925,
+    "inter_annotator_kappa": 0.701,
+    "intra_annotator_kappa": 0.852
+  },
+  "domain_guard": {
+    "median_anom_max": 0.3,
+    "flagged_fraction_max": 0.4,
+    "_note": "Photograph-level out-of-domain guard, two independent directions. A: the anomaly score says everything looks strange -- across the 53 calibration photographs the per-photo MEDIAN anomaly never exceeded 0.287 and the flagged fraction never exceeded 0.333. B: the defect rule says nothing registers at all -- the per-photo MAXIMUM raw defect fraction never fell below 0.0985 and no onion ever read exactly zero. Both cuts sit outside the observed range, so the guard fires on 0 of 53 in-domain photographs. B exists because a brightening shift drives every raw fraction to 0.0 while the anomaly score goes DOWN, not up: direction A is blind to it. See results/phase16b.",
+    "_evidence": {
+      "photos": 53,
+      "onions": 479,
+      "observed_max_median_anom": 0.2869,
+      "observed_max_flagged_fraction": 0.3333,
+      "observed_min_per_photo_max_raw": 0.0985,
+      "observed_min_per_photo_raw_spread": 0.0962,
+      "observed_onions_with_raw_exactly_zero": 0
+    },
+    "min_onions_for_response_check": 3,
+    "max_raw_floor": 0.05
+  },
+  "onion_gate": {
+    "enabled": true,
+    "weights": "onion_gate_v5.pth",
+    "reject_at": 0.8,
+    "review_at": 0.5,
+    "photo_reject_fraction": 0.5,
+    "_note": "Per-detection 'is this an onion?' check, run before grading. p(not onion) >= reject_at: box dropped. review_at <= p < reject_at: kept but flagged for a human. If more than photo_reject_fraction of detections are dropped (or none survive), the whole photo is refused. Measured on 50 tray photos / 438 non-coin detections: no real onion reached 0.8 (highest 0.55); the 2 detections above 0.8 were bare floor. The web-page screenshot's 4 detections (faces, lamp) scored 0.978-0.995. Re-measure with: python -m onion_grader.gatecheck",
+    "faces": true,
+    "face_min_score": 0.8,
+    "face_sure_score": 0.9,
+    "face_in_box": 0.5,
+    "face_of_box": 0.2,
+    "_faces_note": "Boxes covering a human face (OpenCV YuNet, face_yunet.onnx) are dropped. The onion classifier alone missed a vendor's face in a market photo (called it 12% not-onion). Real faces scored 0.88-0.92; on the 50 tray photos YuNet's false 'faces' never exceeded 0.86, so >=0.9 is trusted outright and 0.8-0.9 only when the classifier also calls the face crop not-onion (tray false faces never above 0.26). A box is dropped when >=50% of the face lies inside it and the face is >=20% of the box.",
+    "dedupe_inside": 0.8,
+    "context_pad": 0.5,
+    "_context_note": "Each box is also scored widened by context_pad on every side; rejection uses the higher not-onion score. A tight box on a toenail scored 0.33-0.77 (kept as an onion), with the foot in view 0.83-0.94. On 575 real onions the widened view never exceeded 0.65. 0 turns it off."
+  },
+  "verdict": {
+    "source": "learned",
+    "unhealthy_at": 0.5,
+    "healthy_sure_below": 0.2,
+    "edge_px": 3,
+    "_note": "HEALTHY/UNHEALTHY comes from the v5 classifier (onion_gate_v5.pth). 5-fold cross-validation split by photo on the 538 hand-labelled tray onions: 98.3% balanced (193/198 rotten caught, 337/340 sound passed) vs 88.5% for the old v3 model (onion_gate.pth) with its threshold tuned the same way. Results are flat for any threshold 0.2-0.8, so 0.5 is used and 0.3-0.7 is reported as BORDERLINE. The AGMARK band is kept consistent: unhealthy -> at least Class I; p<0.2 -> Extra Class; otherwise the area band with a review flag. To go back to v3: weights 'onion_gate.pth', unhealthy_at 0.5.",
+    "classify_on": "masked",
+    "mask_fill": [
+      200,
+      200,
+      200
+    ],
+    "borderline": [
+      0.3,
+      0.7
+    ],
+    "_borderline_note": "p_unhealthy in [0.3, 0.7) -> verdict BORDERLINE (check by hand), not counted as healthy or unhealthy. On the 538 hand-labelled tray onions (cross-validated) 0 fell in this range, and v5 was equally accurate at any threshold 0.2-0.8. On new photos (vivo Y29, concrete floor, 2026-09-22) 19 of 126 onions did, and the same onion in 4 shots of one pile scored anywhere from 0.2 to 0.8. unhealthy_at (0.5) only decides which way the grade leans."
+  }
+}

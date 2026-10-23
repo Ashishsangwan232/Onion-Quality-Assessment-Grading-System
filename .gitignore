@@ -1,0 +1,11 @@
+datasets/
+claude outputs/
+kaggle_upload/
+live_snapshots/
+results_v4/
+results_v5/
+venv/
+
+
+understanding_model.pdf
+understanding_report.pdf

@@ -1,0 +1,36 @@
+{
+  "version": "v5",
+  "architecture": "efficientnet_b0",
+  "class_names": [
+    "Healthy",
+    "Unhealthy",
+    "Not Onion"
+  ],
+  "img_size": 224,
+  "norm_mean": [
+    0.485,
+    0.456,
+    0.406
+  ],
+  "norm_std": [
+    0.229,
+    0.224,
+    0.225
+  ],
+  "init": "imagenet",
+  "unhealthy_threshold": 0.13,
+  "cv_balanced_accuracy_tuned": 0.982961972667855,
+  "trained_on": [
+    "crops_v4 (onion_quality, minus its test split)",
+    "mixed_crops (all 538 tray crops)",
+    "vegqual_crops train split"
+  ],
+  "epochs": 6,
+  "per_epoch": {
+    "D": 10000,
+    "T": 3000,
+    "V": 3000
+  },
+  "created": "2026-09-22 10:03",
+  "note": "Expected accuracy on tray photos = the cross-validated number in cv_report.md, not a score on data this model saw."
+}
