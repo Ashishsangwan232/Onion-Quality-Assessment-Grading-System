@@ -27,6 +27,11 @@ from PIL import Image
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from onion_grader.grader import OnionGrader, GRADE_NAMES, BAND_NAMES  # noqa: E402
+from onion_grader import demo  # noqa: E402
+
+# ONION_DEMO=1: the server is too small for the models (Render free tier, 512 MB),
+# so show a result the real pipeline produced earlier instead of running it.
+DEMO = demo.enabled()
 
 st.set_page_config(page_title="Onion Quality Grading", page_icon="🧅", layout="wide")
 BADGE = {0: "#3cc86e", 1: "#f0c846", 2: "#f58c32", 3: "#eb4141"}
@@ -34,7 +39,7 @@ BADGE = {0: "#3cc86e", 1: "#f0c846", 2: "#f58c32", 3: "#eb4141"}
 
 @st.cache_resource
 def load():
-    return OnionGrader()
+    return demo.DemoGrader() if DEMO else OnionGrader()
 
 
 @st.cache_resource(show_spinner=False, max_entries=4)
@@ -286,6 +291,7 @@ with st.sidebar:
         0.0,
         0.01,
         help="Measure any known object: its pixel length ÷ its mm length.",
+        disabled=DEMO,
     )
     st.divider()
     md('<div class="og-nav-label">Measured performance</div>')
@@ -301,7 +307,7 @@ with st.sidebar:
 
 # =================================================================== mode: photo | live
 # On a server (Render etc.) there is no camera to open: set ONION_DISABLE_LIVE=1
-LIVE_OK = os.environ.get("ONION_DISABLE_LIVE", "").lower() not in ("1", "true", "yes")
+LIVE_OK = not DEMO and os.environ.get("ONION_DISABLE_LIVE", "").lower() not in ("1", "true", "yes")
 MODES = ["📷  Photo analysis"] + (["🎥  Live camera"] if LIVE_OK else [])
 try:
     _modebar = st.container(key="modebar")
@@ -336,10 +342,21 @@ with top_r:
     md('<div class="og-spacer"></div>')
     b1, b2 = st.columns(2)
     export_slot = b1.empty()
-    if b2.button("New analysis", type="primary", use_container_width=True):
+    if b2.button("New analysis", type="primary", use_container_width=True, disabled=DEMO):
         st.session_state.up_n += 1
         st.rerun()
 md('<div class="og-spacer"></div>')
+
+if DEMO:
+    st.warning(
+        "**Demo version — showing a pre-computed result.** "
+        "This app is hosted on Render's free tier (512 MB RAM), which is not enough "
+        "to load the AI models (YOLO detector + MobileSAM + onion gate need about 1.5 GB). "
+        "So uploading is turned off here, and the result below is a real one, produced "
+        "earlier by the same pipeline on this sample photograph. "
+        "Run the app locally to grade your own photos.",
+        icon="⚠️",
+    )
 
 # =================================================================== input | result
 col_in, col_out = st.columns([1.05, 0.95], gap="medium")
@@ -355,8 +372,21 @@ with col_in:
             type=["jpg", "jpeg", "png"],
             key="up_%d" % st.session_state.up_n,
             label_visibility="collapsed",
+            disabled=DEMO,
         )
-        if up:
+        if DEMO:
+            with open(demo.IMAGE, "rb") as fh:
+                data = fh.read()
+            digest = "demo"
+            md(
+                '<div class="og-sub" style="margin-top:10px">Sample photograph '
+                "(demo — uploads are disabled on the free tier)</div>"
+            )
+            md(
+                '<img class="og-preview" src="%s" alt="sample photograph">'
+                % preview_b64(digest, data)
+            )
+        elif up:
             data = up.getvalue()
             digest = hashlib.sha1(data).hexdigest()[:16]
             md(
@@ -373,7 +403,7 @@ with col_in:
             unsafe_allow_html=True,
         )
 
-if not up:
+if not up and not DEMO:
     with col_out:
         with card("result"):
             md(
@@ -385,7 +415,7 @@ if not up:
     md('<div class="og-footer">Onion Quality Grading · Image analysis dashboard</div>')
     st.stop()
 
-path = os.path.join(tempfile.gettempdir(), "onion_upload_%s.jpg" % digest)
+path = demo.IMAGE if DEMO else os.path.join(tempfile.gettempdir(), "onion_upload_%s.jpg" % digest)
 if not os.path.exists(path):
     with open(path, "wb") as t:
         t.write(data)
@@ -433,7 +463,9 @@ if not res.onions:
 
 status_slot.markdown(
     '<div style="text-align:right;padding-top:4px"><span class="og-status">'
-    "Graded · %d onions · %s</span></div>" % (res.n_onions, h(res.device)),
+    "%s · %d onions · %s</span></div>"
+    % ("Demo result" if DEMO else "Graded", res.n_onions,
+       "pre-computed" if DEMO else h(res.device)),
     unsafe_allow_html=True,
 )
 export_slot.download_button(
@@ -448,8 +480,14 @@ export_slot.download_button(
 with col_out:
     with card("result"):
         md(
-            '<div class="og-card-h">Detection result</div>'
-            '<div class="og-sub">Detected onions and quality annotations.</div>'
+            '<div class="og-card-h">Detection result%s</div>'
+            '<div class="og-sub">%s</div>'
+            % (
+                ' <span class="og-status red" style="margin-left:6px">DEMO</span>' if DEMO else "",
+                "Already-detected result for the sample photo — the models cannot load on "
+                "the free tier, so this was computed in advance by the same pipeline."
+                if DEMO else "Detected onions and quality annotations.",
+            )
         )
         view, raw = annotated(rkey, o1, o2, res, path)
         md('<div class="og-result"><img src="%s" alt="graded photograph"></div>' % view)

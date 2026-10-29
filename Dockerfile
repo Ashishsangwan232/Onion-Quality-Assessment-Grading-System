@@ -7,6 +7,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     YOLO_CONFIG_DIR=/tmp/Ultralytics \
     ONION_DEVICE=cpu \
     ONION_DISABLE_LIVE=1 \
+    ONION_DEMO=1 \
     PORT=10000
 
 # libGL/glib for OpenCV, libgomp for torch

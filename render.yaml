@@ -4,13 +4,16 @@ services:
     name: onion-quality-grading
     runtime: docker
     dockerfilePath: ./Dockerfile
-    plan: standard          # 2 GB RAM. The models peak at ~1.5 GB; free/starter (512 MB) will crash.
+    plan: free              # 512 MB: too small for the models, so ONION_DEMO=1 shows a pre-computed result.
+                            # On 'standard' (2 GB) set ONION_DEMO to 0 to grade uploads for real.
     region: singapore
     branch: main
     autoDeploy: true
     healthCheckPath: /_stcore/health
     envVars:
       - key: ONION_DISABLE_LIVE   # no camera on a server: hide the Live camera tab
+        value: "1"
+      - key: ONION_DEMO           # free tier: show the saved demo result, load no models
         value: "1"
       - key: ONION_DEVICE
         value: cpu
